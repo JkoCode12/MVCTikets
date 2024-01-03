@@ -1,0 +1,99 @@
+﻿@using Infraestructure.Models.Catalogo
+@*@model Infraestructure.Models.Catalogo.imagenes*@
+@model  IEnumerable<Infraestructure.Models.Catalogo.Imagenes>
+@{
+    ViewBag.Title = "Ticket Host Application";
+}
+
+<style>
+ 
+    .long-title h3 {
+        font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana;
+        font-weight: 200;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .dx-gallery-item {
+        width: 500px;
+        max-width: 100%;
+    }
+
+        .dx-gallery-item img {
+            height: 300px;
+            width: 410px;
+            max-width: 100%;
+        }
+
+        .dx-gallery-item .item-price {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .dx-gallery-item .item-descripcion {
+            width: 50%;
+            margin: 10%;
+            padding: 10%;
+        }
+    .box {
+        width: 50%;
+        margin: 10%;
+        padding: 10%;
+    }
+</style>
+
+<br />
+<div class="long-title mt-4">
+    <h3>@ViewBag.Title</h3>
+    <br />
+
+    @(Html.DevExtreme().Gallery()
+        .ID("gallery")
+        //.DataSource(Model.Images)
+        .DataSource(Model)
+        .Height(490)
+        .Loop(true)
+        .Width("100%")
+        .SlideshowDelay(5000)
+        .ShowNavButtons(true)
+        .ShowIndicator(true)
+        .ItemTemplate(@<text>
+        <div class="mb-1">
+            <img src="<%- Image %>"/>
+            <div class="item-price"> <% Localidades %></div>
+            <br />
+            <div class="item-price"><%- Nombre %></div>
+            <br />
+             <div  class="item-address">
+                     <%- Descripcion %>
+             </div>
+        </div>
+    </text>)
+    )
+    <script>
+
+        function formatCurrency(value) {
+            return "₡" + new Intl.NumberFormat("es-CR", { maximumFractionDigits: 0 }).format(value);
+        }
+
+        function getGalleryInstance() {
+            return $("#gallery").dxGallery("instance");
+        }
+
+        function loopMode_changed(data) {
+            getGalleryInstance().option("loop", data.value);
+        }
+
+        function slideshowDelay_changed(data) {
+            getGalleryInstance().option("slideshowDelay", data.value ? 5000 : 0); //Milisengundos 1000 = 1
+        }
+
+        function showNavigationButtons(data) {
+            getGalleryInstance().option("showNavButtons", data.value);
+        }
+
+        function showIndicator(data) {
+            getGalleryInstance().option("showIndicator", data.value);
+        }
+    </script>

@@ -1,0 +1,96 @@
+﻿@using Infraestructure.Models
+
+@{
+    Layout = "~/Views/Shared/_LayoutLogin.cshtml";
+}
+
+<script src="~/Scripts/sweetalert2.js"></script>
+<style>
+    body {
+        background-color: #f4f7f9;
+    }
+</style>
+
+
+<div class="container">
+    @{
+        if (!string.IsNullOrEmpty(ViewBag.Message))
+        {
+            <div class="alert alert-danger">@ViewBag.Message</div>
+        }
+    }
+
+
+   Version @typeof(MVCTickets.MvcApplication).Assembly.GetName().Version
+
+    <form action="/Login/Login" method="post">
+
+        <div class="row h-80">
+            <div class="col-sm-10 col-md-8 col-lg-6 mx-auto d-table h-80">
+
+                <div class="d-table-cell align-middle">
+
+                    <div class="text-center mt-5">
+                        <h1 class="h2">Bienvenido(a)</h1>
+                        <p class="lead">
+                           
+                        </p>
+                    </div>
+
+                    <div class="card mt-5">
+                        <div class="card-body">
+                            <div class="m-sm-4">
+                                <div class="text-center">
+                                    <img src="~/Content/images/login.png" width="150" height="100" class=" rounded-circle">
+
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Usuario</label>
+                                    <input asp-for="codigo" id="txtCodigo" class="form-control form-control-lg" type="text" name="codigo" placeholder="Ingrese su usuario">
+                                    <span asp-validation-for="codigo" class="text-danger">@ViewBag.Codigo</span>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contraseña</label>
+                                    <input asp-for="contrasena" id="txtClave" class="form-control form-control-lg" type="password" name="contrasena" placeholder="Ingrese su constraseña">
+                                    <span asp-validation-for="contrasena" class="text-danger">@ViewBag.Contrasena</span>
+
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <button type="submit" id="btnGuardar" class="btn btn-lg btn-primary">Ingresar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+@if (TempData["Type"] != null)
+{
+
+    if (TempData["Type"].ToString() == "Fail")
+    {
+        // Se lee el contenido del TempData a una variable de Razor
+        String mensaje = TempData["Message"].ToString();
+        // Eliminar los saltos de linea
+        mensaje = mensaje.Replace(System.Environment.NewLine, "");
+        // Formar llamar JavaScript
+        <script type="text/javascript">
+            $(function () {
+                try {
+                    // De esta forma se pasa una variable de Razor
+                    // a una variable en JavaScript
+                    var msg = "Error :"+"@(mensaje)";
+                    DevExpress.ui.notify(msg, "error", 2000);
+                } catch (err) {
+                    log.console(err)
+                }
+            })
+        </script>
+    }
+}

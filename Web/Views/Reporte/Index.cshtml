@@ -1,0 +1,80 @@
+﻿<h2>Reportes</h2>
+
+<br>
+
+@using (Html.BeginForm("ReporteClienteXCalidades",
+                       "Reporte",
+                       FormMethod.Post,
+                       new
+                       {
+                           target = "_blank",
+                           onsubmit = "return validateForm();"
+                       }))
+{
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2 h-25">
+                Descripción
+            </div>
+            <div class="col-sm-3   h-25">
+                @(Html.DevExtreme().
+                   TextBox().
+                   ID("txtFiltro").
+                   Name("txtFiltro"))
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm h-25">
+                @(Html.DevExtreme().
+                Button().
+                Text("Consultar").
+                UseSubmitBehavior(true).
+                Type(ButtonType.Success))
+            </div>
+        </div>
+    </div>
+    <br>
+}
+
+
+@if (TempData["Type"] != null)
+{
+
+    if (TempData["Type"].ToString() == "Fail")
+    {
+        // Se lee el contenido del TempData a una variable de Razor
+        String mensaje = TempData["Message"].ToString();
+        // Eliminar los saltos de linea
+        mensaje = mensaje.Replace(System.Environment.NewLine, "");
+        // Formar llamar JavaScript
+        <script type="text/javascript">
+            $(function () {
+                try {
+                    // De esta forma se pasa una variable de Razor
+                    // a una variable en JavaScript
+                    var msg = "Error :"+"@(mensaje)";
+                    DevExpress.ui.notify(msg, "error", 2000);
+                } catch (err) {
+                    log.console(err)
+                }
+            })
+        </script>
+    }
+}
+
+<script type="text/javascript">
+
+    function validateForm( ) {
+        var input= $('#txtFiltro').dxTextBox('instance').option('value');
+
+        if (input == "") {
+            return false;
+        } else {
+
+            return true;
+        }
+    }
+
+</script>

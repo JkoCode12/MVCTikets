@@ -1,0 +1,140 @@
+﻿@using Infraestructure.Models.Catalogo
+@model IEnumerable<Infraestructure.Models.Catalogo.TipoEvento>
+@*Script para mensajes con swal*@
+<script src="~/Scripts/sweetalert2.js"></script>
+@{
+    ViewBag.Title = "Tipo Evento (Categorias)";
+}
+
+<style>
+    #form-container {
+        margin: 10px;
+    }
+
+    .long-title h3 {
+        font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana;
+        font-weight: 200;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+
+<div class="long-title"><h3>@ViewBag.Title</h3></div>
+
+
+@(Html.DevExtreme().DataGrid<TipoEvento>()
+    .ID("gridContainer")  //Nombre del Grid
+    .ShowBorders(true) //Muestra los bordes
+    .ColumnMinWidth(50) //Valor mínimo para las columnas de 50
+    .FilterRow(f => f.Visible(true)) //Crear filtros en la parte superior
+    .FilterPanel(f => f.Visible(true)) //Habilitar Panel de filtro
+    .HeaderFilter(f => f.Visible(true)) //Filtro en el encabezado
+    .GroupPanel(p => p.Visible(true)) //Agrupacion panel
+    .Grouping(g => g.AutoExpandAll(false)) //Agrupacion autoexpandible
+    .ColumnAutoWidth(true) //AutoIncrementar tamaño de las columnas
+    .RemoteOperations(true) //Acciones de operacion remoto
+    .ColumnHidingEnabled(true) //Si la cantidad de controles no se adaptan a la pantalla se hace responsive
+    .AllowColumnReordering(true)
+    .SearchPanel(searchPanel => searchPanel.Visible(true))
+    .DataSource(d => d.Mvc().Controller("TipoEvento")
+        .LoadAction("Get")  //Las acciones de consultar estarán en el metodo PUT del controller indicado
+        .UpdateAction("Put")  //Las acciones de modificar estarán en el metodo PUT del controller indicado
+        .InsertAction("Post")  //Las acciones de insertar estarán en el metodo PUT del controller indicado
+        .DeleteAction("Delete")    //Las acciones de eliminar estarán en el metodo PUT del controller indicado
+        .Key("IdTipo")   //La llave dentro del campo del grid será el indicado
+    )
+    .Columns(columns => {
+        //ID TIPOEVENTO
+        columns.AddFor(m => m.IdTipo)
+        .Visible(true)  //No es visible en el grid principal
+        .AllowEditing(false) //Al ser editado no se le permite
+        .FormItem(f=>f.Visible(false) //No se muestra en la edición
+        ).Width(100);
+        //DESCRIPCION TIPO
+        columns.AddFor(m => m.DescripcionTipo)
+        .FormItem(f=>
+        f.Editor(e=>e.TextBox()) //Obtiene caracteristicas del Editor
+        .IsRequired(true) //Es requerido
+        );
+        //ESTADO
+        columns.AddFor(m => m.Estado)
+            .Width(200)   //Tamaño de la columna
+            .SetCellValue("setEstadoValue") //Setear un valor en el selectBox envía value por default como parametro
+            .Lookup(lookup => lookup
+            .DataSource(Enum.GetNames(typeof(TypeEstado))) //Se asocia a los datos de la enumeracion de Estado
+            );
+    })
+    .RowAlternationEnabled(true) //Filas con color alternado en el grid
+    .Paging(p => p.PageSize(10)) //Paginacion por defecto en 10
+     .Pager(pager =>
+     {
+         pager.Visible(true);   //Paginacion visible
+         pager.ShowPageSizeSelector(true); //Mostrar selector de paginas
+         pager.AllowedPageSizes(new JS("[5, 10, 25, 50, 100]")); //Cuadro de opciones para mostrar los datos de la pagina
+         pager.ShowInfo(true); //Mostrar informacion de registros
+         pager.ShowNavigationButtons(true); //Mostrar botones de navegacion de las paginas
+     })
+
+    .Editing(editing =>
+    {
+        editing.Mode(GridEditMode.Popup).Popup(x => x.Title("Tipo de Eventos ").ShowTitle(true));   //Vista en PopUp | Form | Cell | Batch
+        editing.AllowAdding(true);   //Permitir visible boton de agregar
+        editing.AllowDeleting(true); //Permitir visible boton de eliminar
+        editing.AllowUpdating(true); //Permitir visible boton de actualizar
+        editing.UseIcons(true);      //Utilizar iconos en lugar de los nombres
+        editing.Form(f => f.LabelLocation(FormLabelLocation.Top).ColCount(1).Items(items =>
+        {
+            items.AddTabbed().ColSpan(0)  //Agregar Pestañas al momento de editar
+            .Tabs(tabs =>
+            {
+                tabs.Add().Title("Datos")  //Nombre de la pestaña
+        .Items(tabItems =>
+            {
+                tabItems.AddGroup().Caption("Datos").ColCount(2)  //Cantidad de columnas que posee la pestaña
+        .Items(groupItems =>
+            {
+        //Se agregan los campos en la pestaña a mostrar
+        groupItems.AddSimpleFor(m => m.IdTipo);
+                groupItems.AddSimpleFor(m => m.DescripcionTipo);
+                groupItems.AddSimpleFor(m => m.Estado);
+            }); //Cierra el groupItems
+    });//Cierre el tabItems
+    });//Cierra el tabs
+        }));//Cierra el Items
+    })
+    //Seccion de resument
+    .Summary(s => s
+    .TotalItems(totalItems =>
+    {
+        totalItems.AddFor(m => m.DescripcionTipo).SummaryType(SummaryType.Count);
+    })
+    .GroupItems(groupItems =>
+    {
+        groupItems.Add().SummaryType(SummaryType.Count);
+    })
+    ).OnDataErrorOccurred("OnDataErrorOccurred")
+    )
+
+<script>
+    //Setea el valor del estado en el campo estado
+    function setEstadoValue(rowData, value) {
+        rowData.Estado = value;
+    }
+    //Muestra en consola si existe un error
+    function OnDataErrorOccurred(e) {
+        var msg = e.error.message
+        console.log(e);
+
+        Swal.fire({
+            title: 'Atención',
+            text: msg,
+            icon: 'error',
+            timerProgressBar: true,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+</script>

@@ -1,0 +1,191 @@
+﻿@using Infraestructure.Models.Catalogo
+@model IEnumerable<Infraestructure.Models.Catalogo.Producto>
+@*Script para mensajes con swal*@
+<script src="~/Scripts/sweetalert2.js"></script>
+
+<script src="@Url.Action("CldrData", "Home", new { t = CldrDataScriptBuilder.GetCacheParam() })"></script>
+@* reference dictionaries *@
+<script src="~/Scripts/devextreme/localization/dx.messages.es.js"></script>
+
+@{
+    ViewBag.Title = "Configurador de Eventos ";
+}
+
+@*Estilos para la pagina*@
+<style>
+    #form-container {
+        margin: 10px;
+    }
+
+    .long-title h3 {
+        font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana;
+        font-weight: 200;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="long-title"><h3>@ViewBag.Title</h3></div>
+
+<div id="data-grid-demo">
+    @(Html.DevExtreme().DataGrid<Producto>()
+        .ID("gridContainer")
+        .ShowBorders(true)
+        .RemoteOperations(true)
+         .ColumnMinWidth(50) //Valor mínimo para las columnas de 50
+    .FilterRow(f => f.Visible(true)) //Crear filtros en la parte superior
+    .FilterPanel(f => f.Visible(true)) //Habilitar Panel de filtro
+    .HeaderFilter(f => f.Visible(true)) //Filtro en el encabezado
+    .GroupPanel(p => p.Visible(true)) //Agrupacion panel
+    .Grouping(g => g.AutoExpandAll(false)) //Agrupacion autoexpandible
+    .ColumnAutoWidth(true) //AutoIncrementar tamaño de las columnas
+    .RemoteOperations(false) //Acciones de operacion remoto
+    .ColumnHidingEnabled(true) //Si la cantidad de controles no se adaptan a la pantalla se hace responsive
+    .AllowColumnReordering(true)
+    .OnEditingStart("verRegistro")
+    .OnInitNewRow("ActivarRegistro")
+    .SearchPanel(searchPanel => searchPanel.Visible(true))
+        .DataSource(d => d.Mvc().Controller("Producto")
+                                 .LoadAction("Get")
+                                 .UpdateAction("Put")
+                                 .DeleteAction("Delete")
+                                 .InsertAction("Post")
+                                 .Key("IdProducto")
+                    )
+        // Columnas que se muestran en el Grid
+        .Columns(columns =>
+        {
+            columns.AddFor(m => m.IdProducto);
+
+            columns.AddFor(m => m.IdTipo)
+               .Width(125)
+               .Lookup(lookup => lookup
+                   .DataSource(d => d.Mvc().Controller("TipoEvento")
+                   .LoadAction("Get")
+                   .Key("IdTipo"))
+                   .DisplayExpr("DescripcionTipo")
+                   .ValueExpr("IdTipo")
+               );
+
+            columns.AddFor(m => m.DescripcionElectronico);
+
+            columns.AddFor(m => m.Precio);
+
+            columns.AddFor(m => m.MostrarColones).AllowEditing(false).Format("#,##0.00").DataType(GridColumnDataType.Number).FormItem(f => f.Visible(true).IsRequired(false).Editor(e => e.NumberBox().Format("#,##0.00").Max(9999999999999999999).Min(0))).Alignment(HorizontalAlignment.Right); ;
+
+            columns.AddFor(m => m.Sector);
+
+            columns.AddFor(m => m.Cantidad);
+
+            columns.AddFor(m => m.FechaInclusion).DataType(GridColumnDataType.DateTime).Format("dd/MM/yyyy HH:mm ").FormItem(f => f.Visible(true).Editor(e => e.DateBox()));
+
+            columns.AddFor(m => m.Estado);
+        })
+        .Editing(e => e.Mode(GridEditMode.Popup)
+            .UseIcons(true)
+            .AllowUpdating(true)
+            .AllowAdding(true)
+            .AllowDeleting(true)
+            .Popup(p => p
+                .Title("Configurar Evento")
+                .ShowTitle(true)
+            )
+            // Formulario que se muestra al usuario cuando se ingresa o se modifica.
+            .Form(f => f.Items(items => {
+                items.AddGroup()
+                    .ColCount(2)
+                    .ColSpan(2)
+                    .Items(groupItems => {
+                        groupItems.AddSimpleFor(m => m.IdProducto);
+                        groupItems.AddSimpleFor(m => m.IdTipo).ColSpan(2);
+                        groupItems.AddSimpleFor(m => m.DescripcionElectronico);
+                        groupItems.AddSimpleFor(m => m.Precio);
+                        groupItems.AddSimpleFor(m => m.FechaInclusion);
+                        groupItems.AddSimpleFor(m => m.Sector);
+                        groupItems.AddSimpleFor(m => m.Cantidad);
+                        groupItems.AddSimpleFor(m => m.Estado);
+
+                    });
+            }))
+        )
+         .Paging(p => p.PageSize(10)) //Paginacion por defecto en 10
+         .Pager(pager =>
+         {
+             pager.Visible(true);   //Paginacion visible
+             pager.ShowPageSizeSelector(true); //Mostrar selector de paginas
+             pager.AllowedPageSizes(new JS("[5, 10, 25, 50, '100']")); //Cuadro de opciones para mostrar los datos de la pagina
+             pager.ShowInfo(true); //Mostrar informacion de registros
+             pager.ShowNavigationButtons(true); //Mostrar botones de navegacion de las paginas
+         })
+
+    //Seccion de resumen
+    .Summary(s => s
+    .TotalItems(totalItems =>
+    {
+        totalItems.AddFor(m => m).SummaryType(SummaryType.Count);
+    })
+    .GroupItems(groupItems =>
+    {
+        groupItems.Add().SummaryType(SummaryType.Count);
+    })
+    ).OnDataErrorOccurred("OnDataErrorOccurred")
+    )
+</div>
+
+
+<script>
+
+    function setEstadoValue(rowData, value) {
+        rowData.Estado = value;
+    }
+
+    function OnDataErrorOccurred(e) {
+        //console.log("OnDataErrorOccurred");
+        var msg = e.error.message
+        console.log(e);
+
+        Swal.fire({
+            title: 'Atención',
+            text: msg,
+            icon: 'error',
+            timerProgressBar: true,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    //Metodo que permite Bloquear TODAS las columnas y dejarlas como inactivas
+    function verRegistro(e) {
+        var grid = $("#gridContainer").dxDataGrid('instance');
+        var columns = grid.option("columns");
+        grid.beginUpdate();
+        columns.forEach(function (column) {
+            var nombreCampo = column.dataField;
+            if (nombreCampo == "IdProducto") {
+                grid.columnOption(nombreCampo, "allowEditing", false);
+            } else {
+                grid.columnOption(nombreCampo, "allowEditing", true);
+            }
+        });
+        grid.endUpdate();
+    }
+
+    function ActivarRegistro(e) {
+        var grid = $("#gridContainer").dxDataGrid('instance');
+        var columns = grid.option("columns");
+        grid.beginUpdate();
+        columns.forEach(function (column) {
+            var nombreCampo = column.dataField;
+            grid.columnOption(nombreCampo, "allowEditing", true);
+        });
+        grid.endUpdate();
+    }
+
+    function PrecioDolar(e, value, arguments) {
+        e.PrecioDolar = 670;
+        e.PrecioDolar = (value * arguments.Precio) * 670;
+        e.PrecioDolar = value;
+    }
+
+</script>

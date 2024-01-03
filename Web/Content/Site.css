@@ -1,0 +1,21 @@
+﻿    .nav-flag img {
+    width: 30px !important;
+    height: 30px !important;
+}
+.claseRoja {
+    text-align: center;
+    font-family: Arial;
+    font-size: 24pt;
+    color: red;
+}
+
+.claseVerde {
+    text-align: center;
+    font-family: Arial;
+    font-size: 24pt;
+    color: green;
+}
+
+.UpperCase {
+    text-transform: uppercase;
+}

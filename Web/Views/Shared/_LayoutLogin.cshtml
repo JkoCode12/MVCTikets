@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Responsive Bootstrap 4 Admin &amp; Dashboard Template">
+    <meta name="author" content="Bootlab">
+
+    <title>@ViewData["Title"] - Login-MVCTickets </title>
+    <link href="~/Content/classic.css" rel="stylesheet" />
+    <style>
+        body {
+            opacity: 0;
+        }
+    </style>
+    <script src="~/Scripts/site.js"></script>
+    <link rel="stylesheet" href="~/Content/vendor.css" />
+    <link href="~/Content/Site2.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/chart.min.js" crossorigin="anonymous" type="text/javascript"></script>
+    <script src="~/Scripts/app.js" crossorigin="anonymous" rel="stylesheet"></script>
+    <script src="~/Scripts/dx-quill.min.js" crossorigin="anonymous" type="text/javascript"></script>
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
+    <link rel="stylesheet" href="~/Content/vendor.css" />
+    <link rel="stylesheet" href="~/Content/Site2.css" />
+    <link rel="stylesheet" href="~/Content/thirdparty.bundle.css" />
+
+    <link href="~/Content/devextreme/bootstrap.css" rel="stylesheet" />
+    <link href="~/Content/devextreme/dx.common.css" rel="stylesheet" />
+    <link href="~/Content/devextreme/dx.light.css" rel="stylesheet" />
+    @Styles.Render("~/Content/bundle")
+    @Styles.Render("~/Content/DevExtremeBundle")
+    @Scripts.Render("~/Scripts/DevExtremeBundle")
+
+</head>
+<body>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

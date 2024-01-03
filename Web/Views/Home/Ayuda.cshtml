@@ -1,0 +1,63 @@
+﻿@{
+    ViewBag.Title = "Ayuda";
+}
+
+<style>
+    #form-container {
+        margin: 10px;
+    }
+
+    .long-title h3 {
+        font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana;
+        font-weight: 200;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+ 
+<div class="long-title"><h3>@ViewBag.Title</h3></div>
+ 
+<script src="~/Scripts/data/fileSystem.js"></script>
+@(Html.DevExtreme().FileManager()
+    .CurrentPath("Widescreen")
+    .FileSystemProvider(provider => provider
+        .Remote()
+        .Url(Url.HttpRouteUrl("FileManagementImagesApi", null)))
+     .ItemView(view => view.Mode(FileManagerItemViewMode.Thumbnails))
+    .CustomizeThumbnail(@<text>
+        function(fileManagerItem) {
+            var fileExtension = fileManagerItem.getFileExtension();
+            if(fileExtension === ".docx"){
+                return '@Url.Content("~/Content/images/FormatosFiles/Word-2-icon.png")';
+            }else if(fileExtension === ".doc"){
+                return '@Url.Content("~/Content/images/FormatosFiles/Word-2-icon.png")';
+            }else if(fileExtension === ".xls"){
+                return '@Url.Content("~/Content/images/FormatosFiles/Excel-2-icon.png")';
+            }else if(fileExtension === ".xlsx"){
+                return '@Url.Content("~/Content/images/FormatosFiles/Excel-2-icon.png")';
+            }else if(fileExtension === ".xlsm"){
+                return '@Url.Content("~/Content/images/FormatosFiles/Excel-2-icon.png")';
+            }else if(fileExtension === ".pdf"){
+                return '@Url.Content("~/Content/images/FormatosFiles/pdf-icon.png")';
+            }else if(fileExtension === ".pptx"){
+                return '@Url.Content("~/Content/images/FormatosFiles/PowerPoint-2-icon.png")';
+            }else if(fileExtension === ".ppt"){
+                return '@Url.Content("~/Content/images/FormatosFiles/PowerPoint-2-icon.png")';
+            }else{
+                return '@Url.Content("~/Content/images/FormatosFiles/Document-Blank-icon.png")';
+            }
+            return null;
+        }
+    </text>)
+    .Permissions(permissions => permissions
+        .Create(false)
+        .Copy(false)
+        .Move(false)
+        .Delete(false)
+        .Rename(false)
+        .Upload(false)
+        .Download(true))
+    .Height(450)
+    .AllowedFileExtensions(new[] { ".docx", ".pdf",".xlsm" }))

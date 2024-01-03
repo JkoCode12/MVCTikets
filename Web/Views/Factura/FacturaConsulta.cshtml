@@ -1,0 +1,559 @@
+﻿@using Infraestructure.Models.Catalogo
+@model IEnumerable<Infraestructure.Models.Catalogo.FacturaEncabezado>
+@*Script para mensajes con swal*@
+<script src="~/Scripts/sweetalert2.js"></script>
+@*GLOBALIZACION DEL LA VISTA*@
+<script src="@Url.Action("CldrData", "Home", new { t = CldrDataScriptBuilder.GetCacheParam() })"></script>
+<script src="~/Scripts/devextreme/localization/dx.messages.es.js"></script>
+
+@{
+    ViewBag.Title = "Consulta de Facturación";
+}
+<br />
+@*ESTILOS UTILIZADOS EN LA VISTA*@
+<style>
+    #form-container {
+        margin: 10px;
+    }
+
+    .long-title h3 {
+        font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana;
+        font-weight: 200;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .derecha1 {
+        float: right;
+        vertical-align: middle;
+        margin-top: 10px;
+    }
+
+    .izquierda1 {
+        float: left;
+    }
+
+    #paginacion {
+        background-color: white;
+        padding: .5em;
+        overflow: hidden;
+    }
+</style>
+
+ 
+<div class="long-title"><h3>@ViewBag.Title</h3></div>
+
+@*AGREGAMOS LOS FILTROS QUE DESEAMOS*@
+@*PARAMETROS DE BUSQUEDA*@
+<div class="dx-fieldset">
+    @*FECHA DESDE*@
+    <div class="dx-field">
+        <div class="dx-field-label">Fecha Desde</div>
+        <div class="dx-field-value">
+            @(Html.DevExtreme().DateBox()
+            .ID("dtbDesde") //Nombre del control
+            .Type(DateBoxType.Date) //Se declara el tipo de funcion del datebox
+            .Value(DateTime.Now.AddMonths(-3)) //Se asigna el valor actual por default
+            .DisplayFormat("dd/MM/yyyy") //Determina formato de la fecha
+            .MaxLength(10) //Indica el tamaño máximo de caracteres permitidos
+            )
+        </div>
+    </div>
+    @*FECHA HASTA*@
+    <div class="dx-field">
+        <div class="dx-field-label">Fecha Hasta</div>
+        <div class="dx-field-value">
+            @(Html.DevExtreme().DateBox()
+            .ID("dtbHasta") //Nombre del control
+            .Type(DateBoxType.Date) //Se declara el tipo de funcion del datebox
+            .Value(DateTime.Now) //Se asigna el valor actual por default
+            .DisplayFormat("dd/MM/yyyy")  //Determina formato de la fecha
+            .MaxLength(10)//Indica el tamaño máximo de caracteres permitidos
+            )
+        </div>
+    </div>
+    @*ESTADO*@
+    <div class="dx-field">
+        <div class="dx-field">
+            <div class="dx-field-label">Estado</div>
+            <div class="dx-field-value">
+                @(Html.DevExtreme().SelectBox()
+                    .ID("cmbEstadoFactura") //Nombre del control
+                    .DataSource(Enum.GetNames(typeof(TypeEstadoFacturaConsulta))) //Se carga los valores con lo registrado en el enum correspondiente
+                    .Value(TypeEstadoFacturaConsulta.TODO) //Se asigna valor por default
+                )
+            </div>
+        </div>
+    </div>
+    @*BUSCAR*@
+    <div class="dx-field">
+        <div class="dx-field">
+            @(Html.DevExtreme().Button()
+            .ID("btnId") //Nombre del control
+            .Icon("check") //Icono del control a mostrar
+            .Text("Consultar") //Nombre del control a mostrar
+            .Type(ButtonType.Success) //Tipo de control | Success | Back | Danger | Default | Normal
+            .OnClick("consultar") //Al presentarse un click deberá llamar un método de JS
+            .UseSubmitBehavior(false) //No se acciona el Submit de la pantalla
+            )
+        </div>
+    </div>
+</div>
+
+@*Se coloca una imagen alineado a la izquierda*@
+<div id="paginacion">
+    <span class="izquierda1"><img src="~/Content/images/eshopping.png" /></span>
+</div>
+
+<form id="facturar">
+    @(Html.DevExtreme().DataGrid<FacturaEncabezado>()
+    .ID("gridContainer")  //Nombre del Grid
+    .ShowBorders(true) //Muestra los bordes
+    .ColumnMinWidth(50) //Valor mínimo para las columnas de 50
+    .FilterRow(f => f.Visible(true)) //Crear filtros en la parte superior
+    .FilterPanel(f => f.Visible(true)) //Habilitar Panel de filtro
+    .HeaderFilter(f => f.Visible(true)) //Filtro en el encabezado
+    .GroupPanel(p => p.Visible(true)) //Agrupacion panel
+    .Grouping(g => g.AutoExpandAll(false)) //Agrupacion autoexpandible
+    .ColumnAutoWidth(true) //AutoIncrementar tamaño de las columnas
+    .RemoteOperations(true) //Acciones de operacion remoto
+    .ColumnHidingEnabled(true) //Si la cantidad de controles no se adaptan a la pantalla se hace responsive
+    .AllowColumnReordering(true) //Reordena las columnas
+    .SearchPanel(searchPanel => searchPanel.Visible(true))
+    .OnExporting("exporting")  //Permite Exportar según funcion indicada abajo
+    .Export(e => e.Enabled(true).AllowExportSelectedData(true)) //Permite exportar según lo seleccionado
+    .Selection(s => s.Mode(SelectionMode.Multiple))  //Permite Seleccionar varios items
+    .RowAlternationEnabled(true) //Filas con color alternado en el grid
+    .OnEditorPreparing("onEditorPreparing") //Al preparar la vista invoka el metodo
+    .OnInitialized("recargarGrid")  //Al Iniciarse se invoka el método de recargarGrid
+    .OnDataErrorOccurred("onDataErrorOccurred") //Si existe un error lo deberá capturar mediante la funcion JS
+    .DataSource(d => d.Mvc().Controller("Factura")
+        .LoadAction("GetFacturasByDate")  //Las acciones de consultar
+        .Key("IdFactura")   //La llave dentro del campo del grid será el indicado
+    )
+    //creacion de columnas
+    .Columns(columns => {
+        //ID FACTURA
+        columns.AddFor(m => m.IdFactura)
+        .Visible(true)  //No es visible en el grid principal
+        .AllowEditing(false) //Al ser editado no se le permite
+        .FormItem(f=>f.Visible(false) //No se muestra en la edición
+        ).Alignment(HorizontalAlignment.Left);
+
+        //CLIENTE
+        columns.AddFor(m => m.IdCliente)
+            .Lookup(lookup => lookup
+            .DataSource(d => d.Mvc().Controller("Cliente")  //Carga los valores del cliente llama el controller cliente
+                    .LoadAction("Get") //Llama al método Get y de los valores que retorna
+                    .Key("IdCliente")) //Muestra como llave el IdCliente
+                    .DisplayExpr("MostrarCliente") //Los datos a mostrar estarán definidos por el atributo MostrarCliente (Revisar en Models)
+                    .ValueExpr("IdCliente") //El valor del control será el IdCliente
+            ).AllowSearch(true);
+
+        //TARJETA
+        columns.AddFor(m => m.IdTarjeta)
+            .Lookup(lookup => lookup
+                    .DataSource(d => d.Mvc().Controller("Tarjeta")
+                    .LoadAction("Get")
+                    .Key("IdTarjeta"))
+                    .DisplayExpr("DescripcionTarjeta")
+                    .ValueExpr("IdTarjeta")
+            ).AllowSearch(true);
+
+        //TARJETA NÚMERO
+        columns.AddFor(m => m.TarjetaNumero)
+        .FormItem(f=>
+        f.Editor(e=>e.TextBox().MaxLength(17)) //Obtiene caracteristicas del Editor Tamaño maximo 17 para este ejemplo
+        .IsRequired(true) //Es requerido
+        );
+
+        //FECHA DE FACTURACION
+        columns.AddFor(m => m.FechaFacturacion)
+            .DataType(GridColumnDataType.DateTime) //Determina el tipo de control a presentar | Date | DateTime | Number | String | Bool | Object
+            .Format("dd/MM/yyyy") //Muestra el formato presentado
+            .FormItem(f => f.Visible(true) //En la vista del Editor será visible
+                .Editor(e => e.DateBox() //El tipo de Editor será DateBox
+                    .Max(DateTime.Today))); //La fecha maxima en el editor será la fecha actual
+
+        //ESTADO FACTURA
+        columns.AddFor(m => m.EstadoFactura).Visible(true)
+            .Width(200)   //Tamaño de la columna
+            .Lookup(lookup => lookup
+            .DataSource(Enum.GetNames(typeof(TypeEstadoFactura))) //Se asocia a los datos de la enumeracion de Estado
+            ).FormItem(f=>f.Visible(false));
+
+        //BOTONES
+        columns.Add()
+            .DataField("")
+            .Type(GridCommandColumnType.Buttons)
+            .Width(100)
+            .Buttons(b =>
+            {
+                b.Add()  //Se agrega boton nuevo
+                 .Hint("Generar PDF")  //Mensaje
+                 .Icon("print") //Icono de todo
+                 .Visible(new JS("isImprimible"))  //Llama funcion que retorna true o false
+                 .OnClick(string.Format("function(e){{print(e);}}")); //Llama metodo que Activa
+
+                b.Add()  //Se agrega boton nuevo
+                 .Hint("Enviar Correo")  //Mensaje
+                 .Icon("email") //Icono de todo
+                 .Visible(new JS("isImprimible"))  //Llama funcion que retorna true o false
+                 .OnClick(string.Format("function(e){{sendFactura(e);}}")); //Llama metodo que Activa
+            });
+    })
+    .Paging(p => p.PageSize(10)) //Paginacion por defecto en 10
+     .Pager(pager =>
+     {
+         pager.Visible(true);   //Paginacion visible
+         pager.ShowPageSizeSelector(true); //Mostrar selector de paginas
+         pager.AllowedPageSizes(new JS("[5, 10, 25, 50, 100]")); //Cuadro de opciones para mostrar los datos de la pagina
+         pager.ShowInfo(true); //Mostrar informacion de registros
+         pager.ShowNavigationButtons(true); //Mostrar botones de navegacion de las paginas
+     })
+    .Editing(editing =>
+    {
+        editing.Mode(GridEditMode.Popup).Popup(x => x.Title("Facturación").ShowTitle(true));   //Vista en PopUp | Form | Cell | Batch
+        editing.AllowAdding(false);   //Permitir visible boton de agregar
+        editing.AllowDeleting(false); //Permitir visible boton de eliminar
+        editing.AllowUpdating(false); //Permitir visible boton de actualizar
+        editing.UseIcons(true);      //Utilizar iconos en lugar de los nombres
+        editing.Form(f => f.LabelLocation(FormLabelLocation.Top).ColCount(1).Items(items =>
+        {
+            items.AddTabbed().ColSpan(0)  //Agregar Pestañas al momento de editar
+            .Tabs(tabs =>
+            {
+                tabs.Add().Title("Datos")  //Nombre de la pestaña
+        .Items(tabItems =>
+        {
+            tabItems.AddGroup().Caption("Datos").ColCount(2)  //Cantidad de columnas que posee la pestaña
+        .Items(groupItems =>
+        {
+            //Se agregan los campos en la pestaña a mostrar
+            groupItems.AddSimpleFor(m => m.IdFactura);
+            groupItems.AddSimpleFor(m => m.IdCliente);
+            groupItems.AddSimpleFor(m => m.FechaFacturacion);
+            groupItems.AddSimpleFor(m => m.IdTarjeta);
+            groupItems.AddSimpleFor(m => m.TarjetaNumero);
+            groupItems.AddSimpleFor(m => m.EstadoFactura);
+        }); //Cierra el groupItems
+            });//Cierre el tabItems
+                });//Cierra el tabs
+            }));//Cierra el Items
+        })
+        //Seccion de resument
+        .Summary(s => s
+        .TotalItems(totalItems =>
+        {
+            totalItems.AddFor(m => m.IdFactura).SummaryType(SummaryType.Count);
+        })
+        .GroupItems(groupItems =>
+        {
+            groupItems.Add().SummaryType(SummaryType.Count);
+        })
+        )
+        //******************************* MUESTRA EL EXPAND PARA EL GRID SECUNDARIO ******************************
+          .MasterDetail(md => {
+          md.Enabled(true);
+          md.Template(@<text>
+         <div class="master-detail-caption"><h4><b>Detalle de la factura: <%- data.IdFactura %></b></h4></div>
+            @(Html.DevExtreme().DataGrid<FacturaDetalle>()
+            .ID(new JS("data.IdFactura"))  //Nombre del Grid
+            .ShowBorders(true) //Muestra los bordes
+            .ColumnMinWidth(50) //Valor mínimo para las columnas de 50
+            .ColumnAutoWidth(true) //AutoIncrementar tamaño de las columnas
+            .RemoteOperations(true) //Acciones de operacion remoto
+            .ColumnHidingEnabled(true) //Si la cantidad de controles no se adaptan a la pantalla se hace responsive
+            .AllowColumnReordering(true)
+            .OnExporting("exporting")  //Permite Exportar según funcion indicada abajo
+            .Export(e => e.Enabled(true).AllowExportSelectedData(true)) //Permite exportar según lo seleccionado
+            .Selection(s => s.Mode(SelectionMode.Multiple))  //Permite Seleccionar varios items
+            .RowAlternationEnabled(true) //Filas con color alternado en el grid
+            .OnDataErrorOccurred("onDataErrorOccurred") //Si existe un error lo deberá capturar mediante la funcion JS
+            .DataSource(d => d.Mvc().Controller("Factura")
+                .LoadAction("GetFacturaDetalle")  //Las acciones de consultar estarán en el metodo PUT del controller indicado
+                //.Key("Secuencia")   //La llave dentro del campo del grid será el indicado
+                .Key(new string[] { "Secuencia", "IdFactura" })
+                .LoadParams(new { IdFactura = new JS("data.IdFactura")})
+            )
+            .Columns(columns => {
+                //ID FACTURA
+                columns.AddFor(m => m.IdFactura).Width(100)
+                .Visible(true)  //No es visible en el grid principal
+                .AllowEditing(false) //Al ser editado no se le permite
+                .FormItem(f=>f.Visible(true) //No se muestra en la edición
+                ).Alignment(HorizontalAlignment.Left);
+
+                //ID FACTURA
+                columns.AddFor(m => m.Secuencia).Width(100)
+                .Visible(true)  //No es visible en el grid principal
+                .AllowEditing(false) //Al ser editado no se le permite
+                .FormItem(f => f.Visible(true) //No se muestra en la edición
+                ).Alignment(HorizontalAlignment.Left);
+
+                //PRODUCTO
+                columns.AddFor(m => m.IdProducto)
+                    .Lookup(lookup => lookup
+                    .DataSource(d => d.Mvc().Controller("Producto")
+                            .LoadAction("Get")
+                            .Key("IdProducto"))
+                            .DisplayExpr("DescripcionElectronico")
+                            .ValueExpr("IdProducto")
+                    ).AllowSearch(true);
+
+                //CANTIDAD
+                columns.AddFor(m => m.Cantidad)
+                .FormItem(f =>
+                //Muestra el valor minimo, maxim, boton de limpieza, botones de spin
+                f.Editor(e => e.NumberBox().Min(0).Max(9999).ShowClearButton(true).ShowSpinButtons(true)) //Obtiene caracteristicas del Editor
+                .IsRequired(true) //Es requerido
+                );
+
+                //PRECIO
+                //Muestra Inactivo en el editor, formato #,##0.00 de tipo Number, Visible en el editor, No requerido, Botones de spin, botones de limpieza, Valor maximo, Valor minimo, Alineado a la Derecha
+                columns.AddFor(m => m.Precio).AllowEditing(false).Format("#,##0.00").DataType(GridColumnDataType.Number).FormItem(f => f.Visible(true).IsRequired(false).Editor(e => e.NumberBox().Format("#,##0.00").ShowSpinButtons(true).ShowClearButton(true).Max(9999999999999999999).Min(0))).Alignment(HorizontalAlignment.Right);
+
+                //IMPUESTO
+                //Muestra Inactivo en el editor, formato #,##0.00 de tipo Number, Visible en el editor, No requerido, Botones de spin, botones de limpieza, Valor maximo, Valor minimo, Alineado a la Derecha
+                columns.AddFor(m => m.Impuesto).AllowEditing(false).Format("#,##0.00").DataType(GridColumnDataType.Number).FormItem(f => f.Visible(true).IsRequired(false).Editor(e => e.NumberBox().Format("#,##0.00").ShowSpinButtons(true).ShowClearButton(true).Max(9999999999999999999).Min(0))).Alignment(HorizontalAlignment.Right);
+
+                //TOTAL POR LINEA
+                //Muestra Inactivo en el editor, formato #,##0.00 de tipo Number, Visible en el editor, No requerido, Botones de spin, botones de limpieza, Valor maximo, Valor minimo, Alineado a la Derecha
+                columns.AddFor(m => m.TotalLinea).AllowEditing(false).Format("#,##0.00").DataType(GridColumnDataType.Number).FormItem(f => f.Visible(true).IsRequired(false).Editor(e => e.NumberBox().Format("#,##0.00").ShowSpinButtons(true).ShowClearButton(true).Max(9999999999999999999).Min(0))).Alignment(HorizontalAlignment.Right);
+
+                //CANTIDAD DISPONIBLE
+                columns.AddFor(m => m.CantidadDisponible).Visible(false).AllowEditing(false).Format("#,##0.00").DataType(GridColumnDataType.Number).FormItem(f => f.Visible(true).IsRequired(false).Editor(e => e.NumberBox().Format("#,##0.00").ShowSpinButtons(true).ShowClearButton(true).Max(9999999999999999999).Min(0))).Alignment(HorizontalAlignment.Right);
+            })
+            .Paging(p => p.PageSize(5)) //Paginacion por defecto en 10
+            .Pager(pager =>
+            {
+                pager.Visible(true);   //Paginacion visible
+                pager.ShowInfo(true); //Mostrar informacion de registros
+                pager.ShowNavigationButtons(true); //Mostrar botones de navegacion de las paginas
+            })
+            .Editing(editing =>
+            {
+                editing.Mode(GridEditMode.Popup).Popup(x => x.Title("Facturación Detalle").ShowTitle(true));   //Vista en PopUp | Form | Cell | Batch
+                editing.AllowAdding(false);   //Permitir visible boton de agregar
+                editing.AllowDeleting(false); //Permitir visible boton de eliminar
+                editing.AllowUpdating(false); //Permitir visible boton de actualizar
+                editing.UseIcons(true);      //Utilizar iconos en lugar de los nombres
+                editing.Form(f => f.LabelLocation(FormLabelLocation.Top).ColCount(1).Items(items =>
+                {
+                    items.AddTabbed().ColSpan(0)  //Agregar Pestañas al momento de editar
+                    .Tabs(tabs =>
+                    {
+                        tabs.Add().Title("Datos")  //Nombre de la pestaña
+                        .Items(tabItems =>
+                        {
+                            tabItems.AddGroup().Caption("Datos").ColCount(2)  //Cantidad de columnas que posee la pestaña
+                            .Items(groupItems =>
+                            {
+                                //Se agregan los campos en la pestaña a mostrar
+                                groupItems.AddSimpleFor(m => m.IdFactura);
+                                groupItems.AddSimpleFor(m => m.IdProducto);
+                                groupItems.AddSimpleFor(m => m.Cantidad);
+                                groupItems.AddSimpleFor(m => m.Precio);
+                                groupItems.AddSimpleFor(m => m.Impuesto);
+                                groupItems.AddSimpleFor(m => m.TotalLinea);
+                            }); //Cierra el groupItems
+
+
+                            tabItems.AddGroup().Caption("Inventario").ColCount(2)  //Cantidad de columnas que posee la pestaña
+                            .Items(groupItems =>
+                            {
+                                //Se agregan los campos en la pestaña a mostrar
+                                groupItems.AddSimpleFor(m => m.CantidadDisponible);
+                            }); //Cierra el groupItems
+
+                        });//Cierre el tabItems
+                    });//Cierra el tabs
+                }));//Cierra el Items
+            })
+            //Seccion de resument
+            .Summary(s => s
+            .TotalItems(totalItems =>
+            {
+                totalItems.AddFor(m => m.IdProducto).SummaryType(SummaryType.Count);
+                totalItems.AddFor(m => m.TotalLinea).SummaryType(SummaryType.Sum).DisplayFormat("{0}").ValueFormat("#,##0.00");
+                totalItems.AddFor(m => m.Impuesto).SummaryType(SummaryType.Sum).DisplayFormat("{0}").ValueFormat("#,##0.00");
+            })
+            .GroupItems(groupItems =>
+            {
+                groupItems.Add().SummaryType(SummaryType.Count);
+            })
+            )
+            )
+        </text>);
+    })//Fin del Master Details
+    )
+</form>
+
+<script>
+            //Metodo que manda a imprimir la factura
+      function sendFactura(options)
+        {
+            try {
+
+                    Swal.fire({
+                        title: 'Atención',
+                        text: "Debe implementarlo",
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                        timer: 2000
+                    }); 
+
+            } catch (e) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Error al intentar generar el PDF de la factura ',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    timer: 2000
+                });
+            }
+        }
+    //Método que permite determinar si el boton de imprimir deberá ser visible SOLO CUANDO ES PROCESADA
+    function isImprimible(e) {
+        var result = false;
+        if (e.row.data.EstadoFactura == 'PROCESADA') {
+            result = true;
+        } else {
+            result = false;
+        }
+        return result;
+    }
+
+        //Metodo que manda a imprimir la factura
+      function print(options)
+        {
+            try {
+                // Leer el número factura
+                var numeroFactura = options.row.data.IdFactura;
+
+                // Crear url que se debe abrir
+                var url = '@Url.Action("ImprimirFactura", "Factura")?id=' + numeroFactura;
+                // Abrir en una nueva ventana
+                window.open(url, "_blank");
+
+            } catch (e) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Error al intentar generar el PDF de la factura ',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    timer: 2000
+                });
+            }
+        }
+
+    //Se acciona cuando se da clic en boton de consultar
+    function consultar() {
+        //Se toman los valores de los controles de fecha desde y fecha hasta
+        var f1 = $("#dtbDesde").dxDateBox("instance").option("text");
+        var f2 = $("#dtbHasta").dxDateBox("instance").option("text");
+        //Se valida que la fecha hasta sea requerida
+        if (f1 != "" && f2 == "") {
+            if ($("#dtbHasta").dxDateBox("instance").option("text") == "") {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Fecha Hasta es requerida',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return;
+            }
+        }
+        //Se valida que la fecha desde sea requerida
+        if (f2 != "" && f1 == "") {
+            if ($("#dtbDesde").dxDateBox("instance").option("text") == "") {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Fecha Desde es requerida',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return;
+            }
+        }
+        //Valida que la fecha Hasta no puede ser menor que la fecha desde
+        if (f2 != "" && f1 != "") {
+            if ($("#dtbHasta").dxDateBox("instance").option("text") < $("#dtbDesde").dxDateBox("instance").option("text")) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Fecha Hasta no puede ser menor que la Fecha Desde',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return;
+            }
+        }
+        //LLama el metodo recargarGrid
+        recargarGrid();
+        //Muestra mensaje de los datos cargados correctamente
+        Swal.fire({
+            title: 'Atención',
+            text: 'Los registros se han cargado correctamente',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1000
+        });
+    }
+    //Metodo que recarga la informacion del grid
+    function recargarGrid() {
+        //Crea el instanciamiento del grid a una variable
+        var ds = $("#gridContainer").dxDataGrid("instance").getDataSource();
+        //Se crea un filtro para el envio al get mediante el loadOption
+        ds.filter([
+            ["fechaDocumentoDesde", $("#dtbDesde").dxDateBox("instance").option("text")],  //Se crea en la variable el valor del texto del control fecha desde
+            ["fechaDocumentoHasta", $("#dtbHasta").dxDateBox("instance").option("text")],  //Se crea en la variable el valor del texto del control fecha hasta
+            ["estadoFactura", $("#cmbEstadoFactura").dxSelectBox("instance").option("value")] //Se crea en la variable el valor del texto del control estado Factura
+        ]);
+        ds.reload();
+    }
+    //Cuando ocurre un error lo muestra mediante el metodo
+    function onDataErrorOccurred(e) {
+        var msg = e.error.message
+        console.log(e);
+
+        Swal.fire({
+            title: 'Atención',
+            text: msg,
+            icon: 'error',
+            timerProgressBar: true,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    //Metodo que permite exportar en excel el contenido del data grid
+    function exporting(e) {
+            var workbook = new ExcelJS.Workbook();
+            var worksheet = workbook.addWorksheet('Facturas');
+
+            DevExpress.excelExporter.exportDataGrid({
+                component: e.component,
+                worksheet: worksheet,
+                autoFilterEnabled: true
+            }).then(function () {
+                workbook.xlsx.writeBuffer().then(function (buffer) {
+                    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'Facturas.xlsx');
+                });
+            });
+            e.cancel = true;
+    }
+
+
+    //Metodo que prepara el grid es obligatorio
+    function onEditorPreparing(e) {
+        if (e.parentType === "dataRow" && e.dataField === "IdFactura") {
+            e.editorOptions.disabled = (e.row.data.IdFactura !== undefined);
+        }
+    }
+</script>

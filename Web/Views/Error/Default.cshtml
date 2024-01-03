@@ -1,0 +1,17 @@
+﻿
+@{
+    ViewBag.Title = "Default";
+}
+
+<h2>Ups Error</h2>
+<br>
+
+@if (TempData["Message"] != null)
+{
+    String mensaje = "<div class=\"alert  alert-danger\" role=\"alert\">" + TempData["Message"] + " </div>";
+    @Html.Raw(mensaje);
+}
+<br>
+<div>
+    <button onclick="history.back()" type="button" class="btn btn-primary">Regresar</button>
+</div>

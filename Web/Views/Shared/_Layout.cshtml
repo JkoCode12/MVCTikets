@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Responsive Bootstrap 4 Admin &amp; Dashboard Template">
+    <meta name="author" content="Bootlab">
+
+    <title>@ViewData["Title"] - Ticket-Host </title>
+    <link href="~/Content/classic.css" rel="stylesheet" />
+    <style>
+        body {
+            opacity: 0;
+        }
+    </style>
+    <script src="~/Scripts/site.js"></script>
+    <link rel="stylesheet" href="~/Content/vendor.css" />
+    <link href="~/Content/Site2.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/chart.min.js" crossorigin="anonymous" type="text/javascript"></script>
+    <script src="~/Scripts/app.js" crossorigin="anonymous" rel="stylesheet"></script>
+    <script src="~/Scripts/dx-quill.min.js" crossorigin="anonymous" type="text/javascript"></script>
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
+
+    <link rel="stylesheet" href="~/Content/vendor.css" />
+    <link rel="stylesheet" href="~/Content/Site2.css" />
+    <link rel="stylesheet" href="~/Content/thirdparty.bundle.css" />
+
+    <link href="~/Content/devextreme/bootstrap.css" rel="stylesheet" />
+    <link href="~/Content/devextreme/dx.common.css" rel="stylesheet" />
+    <link href="~/Content/devextreme/dx.light.css" rel="stylesheet" />
+
+    @*@Styles.Render("~/Content/bundle")*@
+    @Styles.Render("~/Content/DevExtremeBundle")
+    @*@Scripts.Render("~/Scripts/bundle")*@
+    @Scripts.Render("~/Scripts/DevExtremeBundle")
+
+    <style>
+        /* Modify the background color */
+
+        .navbar-custom {
+            background-color: #006D76;
+        }
+            /* Modify brand and text color */
+
+        .nav-link{
+            color: white;
+        }
+    </style>
+
+</head>
+
+<body class="mt-6">
+    <nav class="navbar navbar-custom fixed-top navbar-expand-md">
+        <a class="navbar-brand mr-6" href="/"><img src="~/Content/images/images/logo.png" height="80" width="300"></a>
+
+        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarColor01">
+            <div id="dropdown-menus" style="display: flex; flex-flow: row wrap">
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="navbar" class="collapse navbar-collapse">
+                    <ul class="navbar-nav mr-auto">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+
+                            @*CATALOGOS*@
+                            if (User.IsInRole("Procesos") || User.IsInRole("Administrador"))
+                            {
+                                <li class="nav-item dropdown mr-4">
+                                    <a class="nav-link" href="#" id="LinkHome" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 20px">
+                                        Mantenimientos
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                        <a>@Html.ActionLink("Tipo Evento", "Index", "TipoEvento", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+                                        <a>@Html.ActionLink("Configurador de eventos", "Index", "Producto", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+                                        <a>@Html.ActionLink("Cliente", "Index", "Cliente", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+                                    </div>
+                                </li>
+
+
+                                @*PROCESOS*@
+                                <li class="nav-item dropdown mr-4">
+                                    <a class="nav-link" href="#" id="LinkHome" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 20px">
+                                        Procesos
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                        <a>@Html.ActionLink("Facturacion", "Index", "Factura", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+                                    </div>
+                                </li>
+
+                            }
+
+                            @*REPORTES https://appstack.bootlab.io/icons-feather.html*@
+                            if (User.IsInRole("Reportes") || User.IsInRole("Administrador") || User.IsInRole("Procesos"))
+                            {
+                                <li class="nav-item dropdown mr-4">
+                                    <a class="nav-link" href="#" id="LinkHome" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 20px">
+                                        Reportes
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                        <a>@Html.ActionLink("Reporte de ventas (Grafico)", "Index", "ReporteGrafico", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+                                        <a>@Html.ActionLink("Reporte de espacios disponibles", "Index", "ReporteEspacios", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+                                    </div>
+                                </li>
+                            }
+
+
+                            if (User.IsInRole("Administrador"))
+                            {
+                                @*GENERALES*@
+                                {
+                                    <li class="nav-item dropdown mr-4">
+                                        <a class="nav-link" href="#" id="LinkHome" role="button" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false" style="font-size: 20px">
+                                            Seguridad
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                            <a>@Html.ActionLink("Seguridad", "Index", "Home", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+
+                                        </div>
+                                    </li>
+                                    <li class="nav-item dropdown mr-4">
+                                        <a class="nav-link" href="#" id="LinkHome" role="button" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false" style="font-size: 20px">
+                                            Auto-evaluacion
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                            <a>@Html.ActionLink("Autocalificacion", "Index", "Autoevaluacion", null, new { @style = "font-size: medium;", @class = "dropdown-item" })</a>
+
+                                        </div>
+                                    </li>
+                                   
+
+                                }
+
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main" role="main">
+
+        <main role="main" class="content">
+            <div class="container-fluid p-0">
+                @RenderBody()
+            </div>
+        </main>
+
+
+
+        <footer class="footer mt-5">
+            <div class="container-fluid">
+                <div class="row text-muted">
+                    <div class="col-6 text-left">
+                        <ul class="list-inline">
+                            <li class="list-inline-item">
+                                <a class="text-muted" href="#">Proyecto</a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a class="text-muted" href="#">MVCTickets</a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a class="text-muted" href="#">ISW 711</a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a class="text-muted" href="#">6-0464-0091</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-6 text-right">
+                        <p class="mb-0"> 2022 - <a href="#" target="_blank" class="text-muted">Josthin Rodriguez Arce - MVCTickets</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    @RenderSection("Scripts", false)
+</body>
+</html>
